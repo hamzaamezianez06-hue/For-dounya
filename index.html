@@ -1,0 +1,645 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>For Dounya 💙</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Alex+Brush&family=Caveat:wght@500;700&family=Montserrat:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,600;1,400&display=swap" rel="stylesheet">
+    
+    <style>
+        .font-sans { font-family: 'Montserrat', sans-serif; }
+        .font-serif-title { font-family: 'Playfair Display', serif; }
+        .font-cursive { font-family: 'Alex Brush', cursive; }
+        .font-handwriting { font-family: 'Caveat', cursive; }
+
+        body {
+            background: linear-gradient(135deg, #070a12 0%, #0d1527 50%, #050811 100%);
+            color: #f0f6ff;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Glassmorphism styling */
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.65);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(147, 197, 253, 0.2);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), 0 0 30px rgba(59, 130, 246, 0.1);
+        }
+
+        /* Keypad button */
+        .key-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.2s ease;
+        }
+        .key-btn:active {
+            transform: scale(0.92);
+            background: rgba(96, 165, 250, 0.25);
+        }
+
+        /* PIN dots */
+        .pin-dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            border: 2px solid rgba(147, 197, 253, 0.5);
+            transition: all 0.2s ease;
+        }
+        .pin-dot.active {
+            background: #60a5fa;
+            border-color: #60a5fa;
+            box-shadow: 0 0 10px #60a5fa;
+            transform: scale(1.15);
+        }
+        .pin-dot.error {
+            background: #ef4444;
+            border-color: #ef4444;
+            box-shadow: 0 0 10px #ef4444;
+        }
+
+        /* Shake animation */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-8px); }
+            40%, 80% { transform: translateX(8px); }
+        }
+        .shake-anim { animation: shake 0.4s ease-in-out; }
+
+        /* Background floating sparkles */
+        #bgCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* Lily Blooming Overlay Canvas */
+        #bloomCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 30;
+            opacity: 0;
+            transition: opacity 1s ease;
+        }
+
+        /* Letter Styling */
+        .letter-paper {
+            background: #fffdf9;
+            background-image: 
+                radial-gradient(#bfdbfe 0.75px, transparent 0.75px),
+                linear-gradient(to bottom, rgba(191, 219, 254, 0.2) 1px, transparent 1px);
+            background-size: 16px 16px, 100% 2.2rem;
+            color: #0f172a;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 30px rgba(96, 165, 250, 0.15);
+        }
+    </style>
+</head>
+<body class="font-sans flex flex-col items-center justify-center min-h-screen relative p-4 select-none">
+
+    <!-- Background Canvas for Soft Floating Hearts & Particles -->
+    <canvas id="bgCanvas"></canvas>
+
+    <!-- Fullscreen Canvas Dedicated to Opening Blue Lilies Animation -->
+    <canvas id="bloomCanvas"></canvas>
+
+    <!-- Top Sound / Music Toggle Button -->
+    <header class="fixed top-4 right-4 z-50">
+        <button id="musicBtn" onclick="toggleAudio()" class="flex items-center gap-2 bg-slate-900/80 hover:bg-slate-800 backdrop-blur-md border border-blue-400/30 text-blue-200 px-4 py-2 rounded-full text-xs sm:text-sm font-medium transition shadow-lg">
+            <i id="musicIcon" class="fas fa-music text-blue-400"></i>
+            <span id="musicText">Play Music</span>
+        </button>
+    </header>
+
+    <!-- MAIN INTERACTIVE CONTAINER -->
+    <main class="w-full max-w-xl z-10 flex flex-col items-center justify-center">
+
+        <!-- ==================== SCREEN 1: PASSCODE LOCK ==================== -->
+        <section id="screenPasscode" class="w-full flex flex-col items-center transition-all duration-500">
+            <div class="glass-panel w-full max-w-sm rounded-3xl p-6 sm:p-8 text-center relative overflow-hidden">
+                
+                <!-- Header Icon -->
+                <div class="w-14 h-14 mx-auto mb-4 rounded-full bg-blue-500/10 border border-blue-400/30 flex items-center justify-center text-blue-300 text-xl animate-pulse">
+                    <i class="fas fa-lock"></i>
+                </div>
+
+                <h1 class="font-cursive text-5xl text-blue-200 mb-1">For Dounya</h1>
+                <p class="text-xs text-blue-200/70 uppercase tracking-widest font-medium mb-6">Enter Passcode</p>
+
+                <!-- PIN Dots Display -->
+                <div id="pinDotsContainer" class="flex justify-center items-center gap-3 mb-6">
+                    <div class="pin-dot"></div>
+                    <div class="pin-dot"></div>
+                    <div class="pin-dot"></div>
+                    <div class="pin-dot"></div>
+                    <div class="pin-dot"></div>
+                    <div class="pin-dot"></div>
+                    <div class="pin-dot"></div>
+                    <div class="pin-dot"></div>
+                </div>
+
+                <!-- Status Text -->
+                <div id="statusMessage" class="h-6 text-xs text-blue-300/90 font-medium mb-4">
+                    Enter the secret 8-digit code 💙
+                </div>
+
+                <!-- Keypad Grid -->
+                <div class="grid grid-cols-3 gap-3 max-w-xs mx-auto">
+                    <button onclick="appendDigit('1')" class="key-btn h-12 rounded-2xl text-xl font-medium text-blue-100">1</button>
+                    <button onclick="appendDigit('2')" class="key-btn h-12 rounded-2xl text-xl font-medium text-blue-100">2</button>
+                    <button onclick="appendDigit('3')" class="key-btn h-12 rounded-2xl text-xl font-medium text-blue-100">3</button>
+                    <button onclick="appendDigit('4')" class="key-btn h-12 rounded-2xl text-xl font-medium text-blue-100">4</button>
+                    <button onclick="appendDigit('5')" class="key-btn h-12 rounded-2xl text-xl font-medium text-blue-100">5</button>
+                    <button onclick="appendDigit('6')" class="key-btn h-12 rounded-2xl text-xl font-medium text-blue-100">6</button>
+                    <button onclick="appendDigit('7')" class="key-btn h-12 rounded-2xl text-xl font-medium text-blue-100">7</button>
+                    <button onclick="appendDigit('8')" class="key-btn h-12 rounded-2xl text-xl font-medium text-blue-100">8</button>
+                    <button onclick="appendDigit('9')" class="key-btn h-12 rounded-2xl text-xl font-medium text-blue-100">9</button>
+                    <button onclick="resetPin()" class="key-btn h-12 rounded-2xl text-xs font-semibold text-rose-300 uppercase">Clear</button>
+                    <button onclick="appendDigit('0')" class="key-btn h-12 rounded-2xl text-xl font-medium text-blue-100">0</button>
+                    <button onclick="removeDigit()" class="key-btn h-12 rounded-2xl text-sm font-medium text-blue-200"><i class="fas fa-backspace"></i></button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== SCREEN 2: BLOOMING LILIES ANIMATION STAGE ==================== -->
+        <section id="screenBloom" class="hidden w-full flex flex-col items-center justify-center text-center py-12 transition-all duration-700 opacity-0">
+            <div class="p-4 rounded-full bg-blue-500/10 border border-blue-400/20 mb-4 animate-bounce">
+                <i class="fas fa-spa text-3xl text-blue-300"></i>
+            </div>
+            <h2 class="font-cursive text-5xl sm:text-6xl text-blue-200 mb-2">Blooming For Dounya...</h2>
+            <p class="text-blue-200/80 font-serif-title italic text-sm sm:text-base">Glowing blue lilies blooming softly for you 💙</p>
+        </section>
+
+        <!-- ==================== SCREEN 3: ENVELOPE & LETTER VIEW ==================== -->
+        <section id="screenLetter" class="hidden w-full flex flex-col items-center transition-all duration-700 opacity-0">
+            
+            <!-- Envelope Interactive Card -->
+            <div id="envelopeCard" class="w-full max-w-md cursor-pointer transition-all duration-300 transform hover:scale-105" onclick="revealPaper()">
+                <div class="glass-panel rounded-3xl p-8 sm:p-10 text-center relative border border-blue-400/30">
+                    <div class="w-20 h-20 mx-auto mb-6 rounded-full bg-blue-500/20 border border-blue-300/40 flex items-center justify-center text-blue-300 text-3xl shadow-inner">
+                        <i class="fas fa-envelope-open-text animate-pulse"></i>
+                    </div>
+
+                    <h2 class="font-cursive text-5xl text-blue-200 mb-2">A Letter For You</h2>
+                    <p class="text-xs text-blue-200/70 uppercase tracking-widest mb-6">Tap to open your message</p>
+
+                    <button class="px-6 py-3 rounded-full bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs tracking-wider uppercase shadow-lg border border-blue-300/30 transition">
+                        Open Envelope ✨
+                    </button>
+                </div>
+            </div>
+
+            <!-- Paper Letter View (Shown after envelope click) -->
+            <div id="paperCard" class="hidden w-full transition-all duration-700 opacity-0 transform scale-95">
+                <div class="letter-paper rounded-2xl p-6 sm:p-10 relative border border-blue-900/10 shadow-2xl">
+                    
+                    <!-- Title -->
+                    <div class="border-b border-blue-950/15 pb-4 mb-6 text-center">
+                        <span class="text-blue-950/60 font-serif-title italic text-xs tracking-widest uppercase block mb-1">To My Dearest</span>
+                        <h3 class="font-cursive text-5xl text-blue-950 font-bold">Dounya</h3>
+                    </div>
+
+                    <!-- Letter Body Text -->
+                    <div class="font-handwriting text-2xl sm:text-3xl text-slate-900 leading-relaxed tracking-wide space-y-4 text-left break-words">
+                        <p class="whitespace-pre-wrap">dounya l3ziza idk what to say but what i said lbareh kan hetach ma3jbnich lblan w idk if i said something bothered u or hurt u walakin 3mrni fkrt nhurtik ki3jbni dima nchufk dahka w ela knti hapoy it means hta ana ghankun happy w I'm sorry abt what i did to you i hqve no idea saraha walakin mli drti haka it means rah chi haja li 9l9atk eliya , umm i just wanna say i love you babe , kanbghiik , w twhchtk and i wanna see that smile trj3 leya w ty for everything aaaaaand last word is kanbghiiik bzf dakchi lach fiya lhdra bzf hhhh and i was thinking abt u nhar kaml 3amr gha bik kula d9i9a w kula sa3a it's because u mean to me w bghitk mn 9lbi w idk if that can make u happy than the normal messages hetach the same thing u know w machi chi haja and hope that u never lose feelings mn jihti w mwah bawasat mn 3ndi lik 😙💕hope twli better 3winati ❤️‍🩹★</p>
+                    </div>
+
+                    <!-- Signature -->
+                    <div class="mt-8 pt-4 border-t border-blue-950/15 text-right">
+                        <p class="font-cursive text-4xl text-blue-950">Always Yours ❤️</p>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- SCRIPT LOGIC -->
+    <script>
+        const PASSCODE = "03122008";
+        let enteredPin = "";
+        let audioContext = null;
+        let isAudioPlaying = false;
+        let musicTimer = null;
+
+        // --- KEYPAD / PIN LOGIC ---
+        function appendDigit(digit) {
+            if (enteredPin.length < 8) {
+                enteredPin += digit;
+                renderPinDots();
+                playClickSound();
+            }
+            if (enteredPin.length === 8) {
+                checkPin();
+            }
+        }
+
+        function removeDigit() {
+            if (enteredPin.length > 0) {
+                enteredPin = enteredPin.slice(0, -1);
+                renderPinDots();
+                playClickSound();
+            }
+        }
+
+        function resetPin() {
+            enteredPin = "";
+            renderPinDots();
+            playClickSound();
+        }
+
+        function renderPinDots() {
+            const dots = document.querySelectorAll('#pinDotsContainer .pin-dot');
+            dots.forEach((dot, idx) => {
+                if (idx < enteredPin.length) {
+                    dot.classList.add('active');
+                    dot.classList.remove('error');
+                } else {
+                    dot.classList.remove('active', 'error');
+                }
+            });
+        }
+
+        function checkPin() {
+            const statusMsg = document.getElementById('statusMessage');
+            const dotsContainer = document.getElementById('pinDotsContainer');
+
+            if (enteredPin === PASSCODE) {
+                statusMsg.textContent = "Unlocked successfully 💙";
+                statusMsg.className = "h-6 text-xs text-blue-300 font-semibold mb-4 animate-pulse";
+                
+                if (!isAudioPlaying) toggleAudio();
+
+                setTimeout(() => {
+                    transitionToBloomStage();
+                }, 500);
+            } else {
+                statusMsg.textContent = "Incorrect passcode. Try again 💕";
+                statusMsg.className = "h-6 text-xs text-rose-400 font-semibold mb-4";
+
+                const dots = document.querySelectorAll('#pinDotsContainer .pin-dot');
+                dots.forEach(dot => dot.classList.add('error'));
+
+                dotsContainer.classList.add('shake-anim');
+                playErrorSound();
+
+                setTimeout(() => {
+                    dotsContainer.classList.remove('shake-anim');
+                    enteredPin = "";
+                    renderPinDots();
+                }, 700);
+            }
+        }
+
+        // --- SEQUENCE STAGE TRANSITIONS ---
+        function transitionToBloomStage() {
+            const screenPasscode = document.getElementById('screenPasscode');
+            const screenBloom = document.getElementById('screenBloom');
+            const screenLetter = document.getElementById('screenLetter');
+            const bloomCanvas = document.getElementById('bloomCanvas');
+
+            // 1. Hide Passcode
+            screenPasscode.classList.add('opacity-0');
+            setTimeout(() => {
+                screenPasscode.classList.add('hidden');
+
+                // 2. Show Bloom screen & start Canvas Lilies
+                screenBloom.classList.remove('hidden');
+                setTimeout(() => screenBloom.classList.remove('opacity-0'), 50);
+
+                bloomCanvas.style.opacity = '1';
+                startBlueLilyBloom();
+
+                // 3. Wait for lilies to bloom, stay, then fade out
+                setTimeout(() => {
+                    bloomCanvas.style.opacity = '0';
+                    screenBloom.classList.add('opacity-0');
+
+                    setTimeout(() => {
+                        screenBloom.classList.add('hidden');
+                        screenLetter.classList.remove('hidden');
+                        setTimeout(() => screenLetter.classList.remove('opacity-0'), 50);
+                    }, 1000);
+
+                }, 4000);
+
+            }, 500);
+        }
+
+        function revealPaper() {
+            const envelopeCard = document.getElementById('envelopeCard');
+            const paperCard = document.getElementById('paperCard');
+
+            playClickSound();
+            envelopeCard.classList.add('opacity-0', 'scale-90');
+
+            setTimeout(() => {
+                envelopeCard.classList.add('hidden');
+                paperCard.classList.remove('hidden');
+                setTimeout(() => {
+                    paperCard.classList.remove('opacity-0', 'scale-95');
+                    paperCard.classList.add('scale-100');
+                    spawnBurstParticles();
+                }, 50);
+            }, 400);
+        }
+
+        // --- AUDIO / MUSIC SYNTHESIZER ---
+        function initAudio() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioContext.state === 'suspended') {
+                audioContext.resume();
+            }
+        }
+
+        function playNote(freq, duration = 2.0) {
+            if (!audioContext || !isAudioPlaying) return;
+            try {
+                const osc = audioContext.createOscillator();
+                const gain = audioContext.createGain();
+
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, audioContext.currentTime);
+
+                gain.gain.setValueAtTime(0.001, audioContext.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.12, audioContext.currentTime + 0.1);
+                gain.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + duration);
+
+                osc.connect(gain);
+                gain.connect(audioContext.destination);
+
+                osc.start();
+                osc.stop(audioContext.currentTime + duration);
+            } catch(e) {}
+        }
+
+        function toggleAudio() {
+            initAudio();
+            isAudioPlaying = !isAudioPlaying;
+
+            const musicIcon = document.getElementById('musicIcon');
+            const musicText = document.getElementById('musicText');
+
+            if (isAudioPlaying) {
+                musicIcon.className = "fas fa-heart text-blue-400 animate-pulse";
+                musicText.textContent = "Music On";
+
+                const notes = [261.63, 329.63, 392.00, 523.25, 220.00, 261.63, 329.63, 440.00];
+                let idx = 0;
+                musicTimer = setInterval(() => {
+                    if (!isAudioPlaying) return;
+                    playNote(notes[idx % notes.length], 2.5);
+                    idx++;
+                }, 900);
+
+            } else {
+                musicIcon.className = "fas fa-music text-blue-400";
+                musicText.textContent = "Play Music";
+                if (musicTimer) clearInterval(musicTimer);
+            }
+        }
+
+        function playClickSound() {
+            try {
+                initAudio();
+                if (!audioContext) return;
+                const osc = audioContext.createOscillator();
+                const gain = audioContext.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(450, audioContext.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(800, audioContext.currentTime + 0.05);
+                gain.gain.setValueAtTime(0.05, audioContext.currentTime);
+                gain.gain.linearRampToValueAtTime(0.001, audioContext.currentTime + 0.05);
+                osc.connect(gain);
+                gain.connect(audioContext.destination);
+                osc.start();
+                osc.stop(audioContext.currentTime + 0.05);
+            } catch(e) {}
+        }
+
+        function playErrorSound() {
+            try {
+                initAudio();
+                if (!audioContext) return;
+                const osc = audioContext.createOscillator();
+                const gain = audioContext.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(180, audioContext.currentTime);
+                osc.frequency.linearRampToValueAtTime(120, audioContext.currentTime + 0.2);
+                gain.gain.setValueAtTime(0.08, audioContext.currentTime);
+                gain.gain.linearRampToValueAtTime(0.001, audioContext.currentTime + 0.2);
+                osc.connect(gain);
+                gain.connect(audioContext.destination);
+                osc.start();
+                osc.stop(audioContext.currentTime + 0.2);
+            } catch(e) {}
+        }
+
+        // --- BACKGROUND CANVAS PARTICLES ---
+        const bgCanvas = document.getElementById('bgCanvas');
+        const bgCtx = bgCanvas.getContext('2d');
+        let bgParticles = [];
+
+        function resizeBgCanvas() {
+            bgCanvas.width = window.innerWidth;
+            bgCanvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeBgCanvas);
+        resizeBgCanvas();
+
+        class BgParticle {
+            constructor() {
+                this.reset();
+            }
+            reset() {
+                this.x = Math.random() * bgCanvas.width;
+                this.y = bgCanvas.height + Math.random() * 30;
+                this.size = Math.random() * 8 + 3;
+                this.speedY = Math.random() * 1 + 0.3;
+                this.opacity = Math.random() * 0.5 + 0.2;
+                this.isHeart = Math.random() > 0.4;
+            }
+            update() {
+                this.y -= this.speedY;
+                this.x += Math.sin(this.y * 0.01) * 0.4;
+                if (this.y < -20) this.reset();
+            }
+            draw() {
+                bgCtx.fillStyle = `rgba(147, 197, 253, ${this.opacity})`;
+                if (this.isHeart) {
+                    bgCtx.font = `${this.size}px serif`;
+                    bgCtx.fillText('💙', this.x, this.y);
+                } else {
+                    bgCtx.beginPath();
+                    bgCtx.arc(this.x, this.y, this.size / 3, 0, Math.PI * 2);
+                    bgCtx.fill();
+                }
+            }
+        }
+
+        for (let i = 0; i < 30; i++) bgParticles.push(new BgParticle());
+
+        function animateBg() {
+            bgCtx.clearRect(0, 0, bgCanvas.width, bgCanvas.height);
+            bgParticles.forEach(p => { p.update(); p.draw(); });
+            requestAnimationFrame(animateBg);
+        }
+        animateBg();
+
+        function spawnBurstParticles() {
+            for (let i = 0; i < 20; i++) {
+                const p = new BgParticle();
+                p.x = bgCanvas.width / 2 + (Math.random() - 0.5) * 150;
+                p.y = bgCanvas.height / 2;
+                p.speedY = Math.random() * 2 + 1;
+                bgParticles.push(p);
+            }
+        }
+
+        // --- BLUE LILIES CANVAS ANIMATION STAGE ---
+        const bloomCanvas = document.getElementById('bloomCanvas');
+        const bCtx = bloomCanvas.getContext('2d');
+        let activeLilies = [];
+
+        function resizeBloomCanvas() {
+            bloomCanvas.width = window.innerWidth;
+            bloomCanvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeBloomCanvas);
+        resizeBloomCanvas();
+
+        class BlueLilyPetal {
+            constructor(x, y, scale) {
+                this.x = x;
+                this.y = y;
+                this.scale = scale;
+                this.growth = 0;
+                this.speed = 0.018 + Math.random() * 0.005;
+            }
+            update() {
+                if (this.growth < 1) this.growth += this.speed;
+            }
+            draw() {
+                bCtx.save();
+                bCtx.translate(this.x, this.y);
+                bCtx.scale(this.scale * this.growth, this.scale * this.growth);
+
+                // Stem
+                bCtx.beginPath();
+                bCtx.moveTo(0, 0);
+                bCtx.quadraticCurveTo(15, 80, 5, 160);
+                bCtx.strokeStyle = "rgba(30, 75, 100, 0.7)";
+                bCtx.lineWidth = 5;
+                bCtx.stroke();
+
+                // Petals
+                for (let i = 0; i < 6; i++) {
+                    const angle = (i * Math.PI * 2) / 6;
+                    bCtx.save();
+                    bCtx.rotate(angle);
+
+                    const grad = bCtx.createLinearGradient(0, 0, 0, -80);
+                    grad.addColorStop(0, "rgba(224, 242, 254, 0.95)");
+                    grad.addColorStop(0.5, "rgba(96, 165, 250, 0.85)");
+                    grad.addColorStop(1, "rgba(29, 78, 216, 0.8)");
+
+                    bCtx.beginPath();
+                    bCtx.moveTo(0, 0);
+                    bCtx.bezierCurveTo(-22, -35, -18, -70, 0, -90);
+                    bCtx.bezierCurveTo(18, -70, 22, -35, 0, 0);
+                    bCtx.fillStyle = grad;
+                    bCtx.shadowColor = "rgba(96, 165, 250, 0.8)";
+                    bCtx.shadowBlur = 12;
+                    bCtx.fill();
+
+                    // Center vein line
+                    bCtx.beginPath();
+                    bCtx.moveTo(0, -5);
+                    bCtx.lineTo(0, -65);
+                    bCtx.strokeStyle = "rgba(30, 58, 138, 0.4)";
+                    bCtx.lineWidth = 1.5;
+                    bCtx.stroke();
+
+                    bCtx.restore();
+                }
+
+                // Stamen Center
+                for (let i = 0; i < 6; i++) {
+                    const angle = (i * Math.PI * 2) / 6 + Math.PI / 6;
+                    bCtx.save();
+                    bCtx.rotate(angle);
+                    bCtx.beginPath();
+                    bCtx.moveTo(0, 0);
+                    bCtx.lineTo(0, -30);
+                    bCtx.strokeStyle = "rgba(186, 230, 253, 0.9)";
+                    bCtx.lineWidth = 2;
+                    bCtx.stroke();
+
+                    bCtx.beginPath();
+                    bCtx.arc(0, -32, 3.5, 0, Math.PI * 2);
+                    bCtx.fillStyle = "#93c5fd";
+                    bCtx.shadowColor = "#3b82f6";
+                    bCtx.shadowBlur = 6;
+                    bCtx.fill();
+                    bCtx.restore();
+                }
+
+                bCtx.restore();
+            }
+        }
+
+        function startBlueLilyBloom() {
+            activeLilies = [];
+            const w = bloomCanvas.width;
+            const h = bloomCanvas.height;
+            const isMobile = w < 640;
+
+            const positions = isMobile ? [
+                { x: w * 0.5, y: h * 0.45, scale: 1.0 },
+                { x: w * 0.25, y: h * 0.3, scale: 0.75 },
+                { x: w * 0.75, y: h * 0.3, scale: 0.75 },
+                { x: w * 0.35, y: h * 0.62, scale: 0.8 },
+                { x: w * 0.65, y: h * 0.62, scale: 0.8 }
+            ] : [
+                { x: w * 0.5, y: h * 0.5, scale: 1.2 },
+                { x: w * 0.25, y: h * 0.35, scale: 0.85 },
+                { x: w * 0.75, y: h * 0.35, scale: 0.85 },
+                { x: w * 0.3, y: h * 0.65, scale: 0.9 },
+                { x: w * 0.7, y: h * 0.65, scale: 0.9 }
+            ];
+
+            positions.forEach(p => activeLilies.push(new BlueLilyPetal(p.x, p.y, p.scale)));
+        }
+
+        function animateBloom() {
+            bCtx.clearRect(0, 0, bloomCanvas.width, bloomCanvas.height);
+            activeLilies.forEach(lily => {
+                lily.update();
+                lily.draw();
+            });
+            requestAnimationFrame(animateBloom);
+        }
+        animateBloom();
+    </script>
+</body>
+</html>
+```
